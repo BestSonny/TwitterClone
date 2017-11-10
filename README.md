@@ -41,8 +41,39 @@ mix phoenix.server
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 # Installation on Windows
+```
+install Elixir
+```
+type 'cmd' in start menu, in the command prompt, type 
+```
+mix local.hex
+```
+to install hex
+```
+download postgresql
+```
+open pgAdmin 4, login 'PostgreSQL 10' using the possword we set in the instal part
+create database 'phoenix_twitter_dev'
+```
+download node.js
+```
 
+open 'cmd' command prompt in administrtor mode, head to the TwitterClone folder
+```
+mix deps.get
 npm install -g windows-build-tools
+```
+
+Restart computer, open Visula Studio 2015 build tools command prompt, head to TwitterClone folder
+```
+mix ecto.create
+mix ecto.migrate
+npm install
+mix phoenix.server
+```
+Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+
+
 
 # License
 
