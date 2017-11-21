@@ -7,7 +7,9 @@ defmodule App.UserController do
   alias App.Follower
 
   import Ecto.Changeset
+  
   @num_tweets 10
+
 
   plug App.LoginRequired when action in [:edit, :update]
   plug App.SetUser when action in [:show]
@@ -41,14 +43,13 @@ defmodule App.UserController do
     """
     res = Ecto.Adapters.SQL.query!(App.Repo, query, [user.id, @num_tweets])
     #IO.puts(", res: #{inspect res}")
+
     cols = Enum.map res.columns, &(String.to_atom(&1)) # b
     
     tweets = Enum.map res.rows, fn(row) ->
       struct(App.Tweet, Enum.zip(cols, row)) # c
     end
     tweets = tweets |> Repo.preload(:user)
-    #tweets = Tweet.changeset(%Tweet{}, tweets)
-    #IO.puts(", tweets: #{inspect tweets}")
 
     render conn, "show.html", user: user, changeset: changeset, tweets: tweets #added by keke
   end
