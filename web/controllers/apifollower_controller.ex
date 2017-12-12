@@ -10,12 +10,17 @@ defmodule App.APIFollowerController do
         current_user = loginconn.assigns[:current_user]
         {userid, _} = Integer.parse(params["follow_id"])
         follower = %Follower{user_id: userid, follower_id: current_user.id}
-        case Repo.insert Follower.changeset(follower, %{}) do
-          {:ok, _follower} ->
-            #redirect conn, to: user_following_path(conn, :index, current_user.id)
-            render loginconn, App.APIErrorView, "index.json", status: %{status: "Successfully followed this user"}
-          {:error, _changeset} ->
-            render loginconn, App.APIErrorView, "index.json", status: %{status: "Unable to follow this user"}
+        try do 
+            case Repo.insert Follower.changeset(follower, %{}) do
+            {:ok, _follower} ->
+                #redirect conn, to: user_following_path(conn, :index, current_user.id)
+                render loginconn, App.APIErrorView, "index.json", status: %{status: "Successfully followed this user"}
+            {:error, _changeset} ->
+                render loginconn, App.APIErrorView, "index.json", status: %{status: "Unable to follow this user"}
+            end
+        rescue
+            _ -> 
+                render loginconn, App.APIErrorView, "index.json", status: %{status: "follow_id #{params["follow_id"]} does not exist"}     
         end
     end
 
@@ -26,7 +31,7 @@ defmodule App.APIFollowerController do
               |> User.put_current_user(user)
             :error ->
               conn
-              |> render(App.APIErrorView, "index.json", status: %{status: 11})
+              |> render(App.APIErrorView, "index.json", status: %{status: "user login failed"})
         end
     end
 

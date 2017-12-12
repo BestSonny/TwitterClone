@@ -10,22 +10,26 @@ defmodule App.APIRetweetController do
     def index(conn,  %{"login"=> login, "password" => password, "tweet_id" => tweet_id} = params) do
       loginconn = login(conn, params["login"], params["password"])
       current_user = loginconn.assigns[:current_user]
-      tweet = Repo.get! Tweet, params["tweet_id"]
-      if tweet.user_id === current_user.id do
-        #conn
-        #|> put_flash(:error, gettext "You are not allowed to retweet your own tweets")
-        #|> redirect(to: user_path(conn, :show, current_user.id))
-        #|> halt
-        render loginconn, App.APIErrorView, "index.json", status: %{status: "You are not allowed to retweet your own tweets"}
-      else
-        retweet_param = %{tweet_id: tweet.id, user_id: current_user.id}
-        changeset = Retweet.changeset(%Retweet{}, retweet_param)
-        try do 
-          Repo.insert! changeset
-          render loginconn, App.APIErrorView, "index.json", status: %{status: "Successfully retweeted"}
-        rescue
-          Ecto.InvalidChangesetError -> render loginconn, App.APIErrorView, "index.json", status: %{status: "retweets pair has already been taken"}
-        end       
+      try do 
+        tweet = Repo.get! Tweet, params["tweet_id"]
+        if tweet.user_id === current_user.id do
+          #conn
+          #|> put_flash(:error, gettext "You are not allowed to retweet your own tweets")
+          #|> redirect(to: user_path(conn, :show, current_user.id))
+          #|> halt
+          render loginconn, App.APIErrorView, "index.json", status: %{status: "You are not allowed to retweet your own tweets"}
+        else
+          retweet_param = %{tweet_id: tweet.id, user_id: current_user.id}
+          changeset = Retweet.changeset(%Retweet{}, retweet_param)
+          try do 
+            Repo.insert! changeset
+            render loginconn, App.APIErrorView, "index.json", status: %{status: "Successfully retweeted"}
+          rescue
+            _ -> render loginconn, App.APIErrorView, "index.json", status: %{status: "retweets pair has already been taken"}
+          end       
+        end
+      rescue
+        _ -> render loginconn, App.APIErrorView, "index.json", status: %{status: "tweet_id #{params["tweet_id"]} does not exist"} 
       end
     end
 
