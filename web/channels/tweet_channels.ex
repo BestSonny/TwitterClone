@@ -7,6 +7,26 @@ defmodule App.TweetChannel do
   alias App.Retweet
   alias App.Tweet
   alias App.Follower
+  import Ecto.Changeset
+  
+  def join("signup", _params, socket) do
+    send self(), {:sign_up, _params}
+    {:ok, socket}
+  end
+
+  def handle_info({:sign_up, _params}, socket), do: socket |> do_sign_up(_params)
+
+  defp do_sign_up(socket, _params) do
+    changeset = User.changeset(%User{}, _params) |> User.with_password_hash
+    changeset = put_change(changeset, :profile_picture, "default_profile.png")
+    case Repo.insert changeset do
+      {:ok, user} ->
+        push socket, "sign_up", %{status: "successfully sign up"}
+      {:error, changeset} ->
+        push socket, "sign_up", %{status: "failed to sign up"}
+    end
+    {:noreply, socket}
+  end
 
   def join("search", _params, socket) do
       send self(), {:search, _params}
@@ -114,9 +134,9 @@ defmodule App.TweetChannel do
     end
   end
 
-  def handle_info({:subscribe, _params, user}, socket), do: socket |> subscribe( _params, user)
+  def handle_info({:subscribe, _params, user}, socket), do: socket |> subscribe_user( _params, user)
 
-  defp subscribe(socket,  _params, user) do
+  defp subscribe_user(socket,  _params, user) do
     {userid, _} = Integer.parse(_params["follow_id"])
     follower = %Follower{user_id: userid, follower_id: user.id}
     try do
@@ -127,8 +147,7 @@ defmodule App.TweetChannel do
             push socket, "subscribe", status: %{status: "Unable to follow this user"}
         end
     rescue
-        _ ->
-            push socket, "subscribe", %{status: "follow_id #{_params["follow_id"]} does not exist"}
+        _ -> push socket, "subscribe", status: %{status: "XXX to follow this user"}
     end
     {:noreply, socket}
   end

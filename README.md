@@ -14,7 +14,6 @@ following features:
   * Follow other users
   * Clickable user mention links
   * Clickable hashtags to view all tweets with that hashtag
-  * Swedish translation
 
 There are some Postgres spcific SQL commands since there is no union
 functionality in Ecto. The CSS is done with [SASS](http://sass-lang.com/) and
@@ -44,7 +43,7 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 ```
 install Elixir
 ```
-type 'cmd' in start menu, in the command prompt, type 
+type 'cmd' in start menu, in the command prompt, type
 ```
 mix local.hex
 ```
