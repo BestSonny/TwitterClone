@@ -3,7 +3,8 @@ defmodule App.UserSocket do
 
   ## Channels
   # channel "room:*", App.RoomChannel
-
+  channel "tweet", App.TweetChannel
+  channel "signup", App.SignupChannel
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
   # transport :longpoll, Phoenix.Transports.LongPoll
