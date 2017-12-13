@@ -6,7 +6,7 @@ defmodule App.TweetChannel do
   require Logger
   alias App.Retweet
   alias App.Tweet
-
+  alias App.Follower
 
   def join("search", _params, socket) do
       send self(), {:search, _params}
@@ -35,17 +35,6 @@ defmodule App.TweetChannel do
     {:noreply, socket}
   end
 
-  def join("tweet", _params, socket) do
-      case authenticate _params["login"], _params["password"] do
-        {:ok, user} ->
-          with socket <- socket |> assign(:joined_at, NaiveDateTime.utc_now) do
-            send self(), {:send_tweet, _params, user}
-            {:ok, socket}
-        end
-        :error ->
-          {:error, %{reason: "unauthorized"}}
-    end
-  end
 
   def join("retweet", _params, socket) do
       case authenticate _params["login"], _params["password"] do
@@ -82,6 +71,18 @@ defmodule App.TweetChannel do
     {:noreply, socket}
   end
 
+  def join("tweet", _params, socket) do
+      case authenticate _params["login"], _params["password"] do
+        {:ok, user} ->
+          with socket <- socket |> assign(:joined_at, NaiveDateTime.utc_now) do
+            send self(), {:send_tweet, _params, user}
+            {:ok, socket}
+        end
+        :error ->
+          {:error, %{reason: "unauthorized"}}
+    end
+  end
+
   def handle_info({:send_tweet, _params, user}, socket), do: socket |> send_tweet( _params, user)
 
   defp send_tweet(socket,  _params, user) do
@@ -97,6 +98,37 @@ defmodule App.TweetChannel do
       push socket, "send_tweet", %{status: "successfully send tweet"}
     else
       push socket, "send_tweet", %{status: "failed to send tweet "}
+    end
+    {:noreply, socket}
+  end
+
+  def join("subscribe", _params, socket) do
+      case authenticate _params["login"], _params["password"] do
+        {:ok, user} ->
+          with socket <- socket |> assign(:joined_at, NaiveDateTime.utc_now) do
+            send self(), {:subscribe, _params, user}
+            {:ok, socket}
+        end
+        :error ->
+          {:error, %{reason: "unauthorized"}}
+    end
+  end
+
+  def handle_info({:subscribe, _params, user}, socket), do: socket |> subscribe( _params, user)
+
+  defp subscribe(socket,  _params, user) do
+    {userid, _} = Integer.parse(_params["follow_id"])
+    follower = %Follower{user_id: userid, follower_id: user.id}
+    try do
+        case Repo.insert Follower.changeset(follower, %{}) do
+        {:ok, _follower} ->
+            push socket, "subscribe", %{status: "Successfully followed this user"}
+        {:error, _changeset} ->
+            push socket, "subscribe", status: %{status: "Unable to follow this user"}
+        end
+    rescue
+        _ ->
+            push socket, "subscribe", %{status: "follow_id #{_params["follow_id"]} does not exist"}
     end
     {:noreply, socket}
   end
