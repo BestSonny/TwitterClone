@@ -5,6 +5,8 @@ defmodule App.TweetChannel do
   alias App.Tagging
   alias App.Tweet
   require Logger
+  alias App.Retweet
+  alias App.Tweet
 
   def join("tweet", _params, socket) do
       case authenticate _params["login"], _params["password"] do
@@ -16,6 +18,41 @@ defmodule App.TweetChannel do
         :error ->
           {:error, %{reason: "unauthorized"}}
     end
+  end
+
+  def join("retweet", _params, socket) do
+      case authenticate _params["login"], _params["password"] do
+        {:ok, user} ->
+          with socket <- socket |> assign(:joined_at, NaiveDateTime.utc_now) do
+            send self(), {:retweet, _params, user}
+            {:ok, socket}
+        end
+        :error ->
+          {:error, %{reason: "unauthorized"}}
+    end
+  end
+
+  def handle_info({:retweet, _params, user}, socket), do: socket |> retweet( _params, user)
+
+  defp retweet(socket, _params, user) do
+    try do
+      tweet = Repo.get! Tweet, _params["tweet_id"]
+      if tweet.user_id === user.id do
+        push socket, "retweet", %{status: "You are not allowed to retweet your own tweets"}
+      else
+        retweet_param = %{tweet_id: tweet.id, user_id: user.id}
+        changeset = Retweet.changeset(%Retweet{}, retweet_param)
+        try do
+          Repo.insert! changeset
+          push socket, "retweet", %{status: "successfully retweet"}
+        rescue
+          _ -> push socket, "retweet", %{status: "retweets pair has already been taken"}
+        end
+      end
+    rescue
+      _ ->  push socket, "retweet", %{status: "tweet_id #{_params["tweet_id"]} does not exist"}
+    end
+    {:noreply, socket}
   end
 
   def handle_info({:send_tweet, _params, user}, socket), do: socket |> send_tweet( _params, user)
