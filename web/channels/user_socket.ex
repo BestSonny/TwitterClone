@@ -5,6 +5,7 @@ defmodule App.UserSocket do
   # channel "room:*", App.RoomChannel
   channel "tweet", App.TweetChannel
   channel "retweet", App.TweetChannel
+  channel "search", App.TweetChannel
   channel "signup", App.SignupChannel
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

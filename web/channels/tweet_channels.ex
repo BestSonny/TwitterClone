@@ -3,10 +3,37 @@ defmodule App.TweetChannel do
   alias App.User
   alias App.Tag
   alias App.Tagging
-  alias App.Tweet
   require Logger
   alias App.Retweet
   alias App.Tweet
+
+
+  def join("search", _params, socket) do
+      send self(), {:search, _params}
+      {:ok, socket}
+  end
+
+  defp tweets_json(tweet) do
+    %{
+      text: tweet.text,
+      retweet_id: tweet.retweet_id,
+      current_user_favorite_id: tweet.current_user_favorite_id,
+      current_user_retweet_id: tweet.current_user_retweet_id,
+    }
+  end
+
+  def handle_info({:search, _params}, socket), do: socket |> search( _params)
+
+  defp search(socket,  _params) do
+    IO.inspect _params["query"]
+    tweets = (from t in Tweet, where: like(t.text, ^("%#{_params["query"]}%")))
+    |> Repo.all() |> Repo.preload(:user)
+    IO.inspect tweets
+    push socket, "search", %{tweet: %{
+      tweets: Enum.map(tweets, &tweets_json/1)
+    }}
+    {:noreply, socket}
+  end
 
   def join("tweet", _params, socket) do
       case authenticate _params["login"], _params["password"] do

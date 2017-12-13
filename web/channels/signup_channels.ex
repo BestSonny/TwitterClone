@@ -22,5 +22,5 @@ defmodule App.SignupChannel do
     end
     {:noreply, socket}
   end
-  
+
 end

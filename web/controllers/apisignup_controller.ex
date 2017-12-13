@@ -1,10 +1,10 @@
 defmodule App.APISignupController do
     use App.Web, :controller
-  
+
     alias App.User
-  
+
     import Ecto.Changeset
-  
+
     plug App.RedirectAuthenticated
     def index(conn, %{"login" =>login, "name" => name, "password" => password, "password_confirmation" => password_confirmation, "email"=> email} = user_params) do
         #conn
@@ -24,7 +24,7 @@ defmodule App.APISignupController do
             render conn, "index.json", status: %{status: "signup failed"}
         end
     end
-  
+
     def create(conn, %{"user" => user_params}) do
       changeset = User.changeset(%User{}, user_params) |> User.with_password_hash
       changeset = put_change(changeset, :profile_picture, "default_profile.png")
@@ -39,4 +39,3 @@ defmodule App.APISignupController do
       end
     end
   end
-  

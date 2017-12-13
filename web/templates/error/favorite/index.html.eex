@@ -1,0 +1,12 @@
+<div class="row">
+  <div class="col-lg-4">
+    <%= render App.SharedView, "user_info.html", conn: @conn, user: @user, active: "favorites" %>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="area"><h4><%= gettext "Favorites" %></h4></div>
+    <%= for tweet <- @tweets do %>
+      <%= render App.SharedView, "tweet_item.html", conn: @conn, user: @user, tweet: tweet %>
+    <% end %>
+  </div>
+</div>
